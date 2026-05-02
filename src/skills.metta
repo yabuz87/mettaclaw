@@ -14,16 +14,16 @@
     "- Search the web: search string"
     ;CODE EXECUTION:
     "- Execute MeTTa expression: metta sexpression"
-    "Example to invoke Non-Axiomatic Logic via MeTTa: "
-    "metta (|- ((--> (× sam garfield) friend) (stv 1.0 0.9))"
-    "          ((--> garfield animal) (stv 1.0 0.9)))"
-    "metta (|- ((==> (--> (× $1 elephant) eat) (--> $1 ([] dangerous))) (stv 1.0 0.9))"
-    "          ((--> (× tiger elephant) eat) (stv 1.0 0.9)))"
-    "Also: note the $1 for independent variables, and for negated knowledge use (stv 0.0 0.9)"
-    "Additionally |- also works for revision, to merge evidence even when the term of both premises is the same."
-    "You can use: metta (add-atom &persistent sexpression) to add expressions to the persistent atomspace."
-    "Functions added there are also persisted and can be called directly via the metta command."
-    "And if you add a function named prelude, it gets executed every cycle and its return value will be directly visible to you."))
+    "- Example to invoke Non-Axiomatic Logic via MeTTa: "
+    " metta (|- ((--> (× sam garfield) friend) (stv 1.0 0.9))"
+    "           ((--> garfield animal) (stv 1.0 0.9)))"
+    " metta (|- ((==> (--> (× $1 elephant) eat) (--> $1 ([] dangerous))) (stv 1.0 0.9))"
+    "           ((--> (× tiger elephant) eat) (stv 1.0 0.9)))"
+    "- Also: note the $1 for independent variables, and for negated knowledge use (stv 0.0 0.9)"
+    "- Additionally |- also works for revision, to merge evidence even when the term of both premises is the same."
+    "- You can use: metta (add-atom &persistent sexpression) to add expressions to the persistent atomspace up to a configured maximum size."
+    "- Functions added there are also persisted and can be called directly via the metta command, and check for current content with: metta (get-atoms &persistent)"
+    "- And if you add a function named prelude, it gets executed every cycle and its return value will be directly visible to you."))
 
 (= (read-file $file)
    (progn (translatePredicate (exists_file $file))
@@ -54,13 +54,17 @@
 (= (pin $x)
    PIN-SUCCESS)
 
-!(import_prolog_function string_length)
 (= (export! $space $file)
    (progn (write-file $file "")
-          (change-state! &exportchars 0)
+          (collapse (let $x (get-atoms $space)
+                         (append-file $file (repr $x))))))
+
+!(import_prolog_function string_length)
+(= (bound-space! $space $limit)
+   (progn (change-state! &exportchars 0)
           (collapse (let* (($x (get-atoms $space))
                            ($y (repr $x))
                            ($l (string_length $y))
                            ($_ (change-state! &exportchars (+ (get-state &exportchars) $l))))
-                          (if (< (get-state &exportchars) 3000)
-                              (append-file $file (repr $x)) _)))))
+                          (if (> (get-state &exportchars) $limit)
+                              (remove-atom $space $x) _)))))
