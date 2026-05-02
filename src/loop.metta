@@ -7,6 +7,7 @@
 (= (reasoningMode) (empty))
 (= (wakeupInterval) (empty))
 (= (spamShield) (empty))
+(= (maxPersistentAtomsExportChars) (empty))
 
 (= (initLoop)
    (progn (configure maxNewInputLoops 50) ;20
@@ -18,6 +19,7 @@
           (configure maxOutputToken 6000)
           (configure reasoningMode medium)
           (configure wakeupInterval 600) ;600=10 minutes
+          (configure maxPersistentAtomsExportChars 1000)
           (change-state! &prevmsg "")
           (change-state! &lastresults "")
           (change-state! &loops (maxNewInputLoops))))
@@ -31,7 +33,7 @@
                          " toolName4 arg4" (newline)
                          " toolName5 arg5" (newline)
                          " LAST_SKILL_USE_RESULTS: " (last_chars (get-state &lastresults) (maxFeedback)) " HISTORY: " (getHistory)
-                         " PRELUDE: " (last_chars (metta "(collapse (catch (prelude)))") (maxFeedback)) " TIME: " (get_time_as_string)))))
+                         " &persistent: " (repra (collapse (get-atoms &persistent))) " PRELUDE: " (last_chars (metta "(collapse (catch (prelude)))") (maxFeedback)) " TIME: " (get_time_as_string)))))
 
 (= (HandleError $msg $cmd $sexpr)
    (case $sexpr (((Error $a $b) (let $new (append (get-state &error) (($msg $cmd)))
@@ -76,6 +78,6 @@
                                              (change-state! &lastresults (string-safe (repr $results)))))
                                 (if (> (get_time) (get-state &nextWakeAt))
                                     (change-state! &loops (+ 1 (maxWakeLoops))) _)))
-                      (export! &persistent ./repos/mettaclaw/memory/persistent.metta)
+                      (export! (maxPersistentAtomsExportChars) &persistent ./repos/mettaclaw/memory/persistent.metta)
                       (sleep (sleepInterval))
                       (mettaclaw (+ 1 $k))))))
