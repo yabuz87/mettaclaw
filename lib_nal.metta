@@ -194,7 +194,7 @@
 (= (|-nal ($A $T1) ((==> (∧ $A $B) $C) $T2)) ((==> $B $C) (Truth_Deduction $T1 $T2)))
 (= (|-nal ((¬ $A) $T1) ((==> (∧ $A $B) $C) $T2)) ((==> $B $C) (Truth_Deduction (Truth_Negation $T1) $T2)))
 (= (|-nal ($A $T1) ((==> (∧ (¬ $A) $B) $C) $T2)) ((==> $B $C) (Truth_Deduction (Truth_Negation $T1) $T2)))
-(= (|-nal ($B $T1) ((==> $A $B) $T2)) ($A (Truth_Abduction $T1 $T2)))
+(= (|-nal ($B $T1) ((==> $A $B) $T2)) ($A (Truth_Induction $T1 $T2)))
 (= (|-nal ((¬ $B) $T1) ((==> $A $B) $T2)) ($A (Truth_Abduction (Truth_Negation $T1) $T2)))
 (= (|-nal ($B $T1) ((==> $A (¬ $B)) $T2)) ($A (Truth_Abduction (Truth_Negation $T1) $T2)))
 
