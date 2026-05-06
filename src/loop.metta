@@ -8,7 +8,6 @@
 (= (wakeupInterval) (empty))
 (= (spamShield) (empty))
 (= (maxPersistentAtomsChars) (empty))
-(= (maxPreludeChars) (empty))
 
 (= (initLoop)
    (progn (configure maxNewInputLoops 50) ;20
@@ -21,7 +20,6 @@
           (configure reasoningMode medium)
           (configure wakeupInterval 600) ;600=10 minutes
           (configure maxPersistentAtomsChars 10000)
-          (configure maxPreludeChars 1000)
           (change-state! &prevmsg "")
           (change-state! &lastresults "")
           (change-state! &loops (maxNewInputLoops))))
@@ -35,7 +33,7 @@
                          " toolName4 arg4" (newline)
                          " toolName5 arg5" (newline)
                          " LAST_SKILL_USE_RESULTS: " (last_chars (get-state &lastresults) (maxFeedback)) " HISTORY: " (getHistory)
-                         " PRELUDE: " (last_chars (metta "(collapse (catch (prelude)))") (maxPreludeChars)) " TIME: " (get_time_as_string)))))
+                         " TIME: " (get_time_as_string)))))
 
 (= (HandleError $msg $cmd $sexpr)
    (case $sexpr (((Error $a $b) (let $new (append (get-state &error) (($msg $cmd)))

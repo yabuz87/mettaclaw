@@ -16,6 +16,7 @@
           (configure maxHistory 30000)
           (configure embeddingprovider OpenAI) ;OpenAI or Local
           (configure promotionInflationFactor 10)
+          (py-call (helper.promotion_open_map))
           (if (== (embeddingprovider) Local)
               (py-call (lib_llm_ext.initLocalEmbedding)) _)))
 

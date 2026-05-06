@@ -23,8 +23,7 @@
     "- Also: note the $1 for independent variables, and for negated knowledge use (stv 0.0 0.9)"
     "- Additionally |- also works for revision, to merge evidence even when the term of both premises is the same."
     "- You can use: metta (add-atom &persistent sexpression) to add expressions to the persistent atomspace up to a configured maximum size."
-    "- Functions added there are also persisted and can be called directly via the metta command, and check for current content with: metta (get-atoms &persistent)"
-    "- And if you add a function named prelude, it gets executed every cycle and its return value will be directly visible to you."))
+    "- Functions added there are also persisted and can be called directly via the metta command, and check for current content with: metta (get-atoms &persistent)"))
 
 (= (read-file $file)
    (progn (translatePredicate (exists_file $file))
