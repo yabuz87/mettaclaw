@@ -72,4 +72,5 @@
    (let $v (py-call (helper.promotion_get_value $uuid 0))
         (progn (py-call (helper.promotion_set_value $uuid (+ 1.0 $v)))
                (py-call (helper.promotion_set_lasttime $uuid (get_time)))
-               (py-call (helper.promotion_commit)))))
+               (py-call (helper.promotion_commit))
+               PROMOTE-SUCCESS)))
