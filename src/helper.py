@@ -1,5 +1,8 @@
 from collections import deque
 import re
+import sqlite3
+import uuid
+import os
 from datetime import datetime
 
 TS_RE = re.compile(r'^\("(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})"')
@@ -129,5 +132,106 @@ def test_balance_parenthesis():
 	assert balance_parentheses('write-file test.txt "hello world"') == '((write-file "test.txt" "hello world"))'
 	assert balance_parentheses('send test.xt hello world') == '((send "test.xt hello world"))'
 
+_PROMOTION_CONN = None
+
+def promotion_open_map(path="repos/mettaclaw/memory/promotions.db"):
+    global _PROMOTION_CONN
+    _PROMOTION_CONN = sqlite3.connect(path)
+    _PROMOTION_CONN.execute("PRAGMA journal_mode=WAL")
+    _PROMOTION_CONN.execute("PRAGMA synchronous=NORMAL")
+    _PROMOTION_CONN.execute("""
+        CREATE TABLE IF NOT EXISTS kv (
+            key BLOB PRIMARY KEY,
+            value REAL NOT NULL,
+            lasttime REAL
+        )
+    """)
+    _PROMOTION_CONN.commit()
+
+def promotion_key(k):
+    if isinstance(k, uuid.UUID):
+        return k.bytes
+    if isinstance(k, str):
+        return uuid.UUID(k).bytes
+    if isinstance(k, bytes) and len(k) == 16:
+        return k
+    raise TypeError("key must be uuid.UUID, UUID string, or 16-byte UUID")
+
+def promotion_set_value(k, v):
+    _PROMOTION_CONN.execute(
+        """
+        INSERT INTO kv(key, value)
+        VALUES (?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+        """,
+        (promotion_key(k), float(v))
+    )
+
+def promotion_get_value(k, default=None):
+    row = _PROMOTION_CONN.execute(
+        "SELECT value FROM kv WHERE key = ?",
+        (promotion_key(k),)
+    ).fetchone()
+    return row[0] if row else default
+
+def promotion_set_lasttime(k, t):
+    _PROMOTION_CONN.execute(
+        """
+        INSERT INTO kv(key, value, lasttime)
+        VALUES (?, 0.0, ?)
+        ON CONFLICT(key) DO UPDATE SET lasttime = excluded.lasttime
+        """,
+        (promotion_key(k), float(t))
+    )
+
+def promotion_get_lasttime(k, default=None):
+    row = _PROMOTION_CONN.execute(
+        "SELECT lasttime FROM kv WHERE key = ?",
+        (promotion_key(k),)
+    ).fetchone()
+    return row[0] if row and row[0] is not None else default
+
+def promotion_has_key(k):
+    row = _PROMOTION_CONN.execute(
+        "SELECT 1 FROM kv WHERE key = ?",
+        (promotion_key(k),)
+    ).fetchone()
+    return row is not None
+
+def promotion_delete_key(k):
+    _PROMOTION_CONN.execute(
+        "DELETE FROM kv WHERE key = ?",
+        (promotion_key(k),)
+    )
+
+def promotion_commit():
+    _PROMOTION_CONN.commit()
+
+def promotion_close_map():
+    global _PROMOTION_CONN
+    if _PROMOTION_CONN is not None:
+        _PROMOTION_CONN.commit()
+        _PROMOTION_CONN.close()
+        _PROMOTION_CONN = None
+
 if __name__ == "__main__":
     test_balance_parenthesis()
+    path = "test.db"
+    if os.path.exists(path):
+        os.remove(path)
+    promotion_open_map(path)
+    k = "b7e55f3a-376f-493f-a5cb-9a9e01e7f062"
+    promotion_set_value(k, 0.73)
+    assert promotion_get_value(k) == 0.73
+    assert promotion_has_key(k) is True
+    promotion_set_lasttime(k, 123.45)
+    assert promotion_get_lasttime(k) == 123.45
+    assert promotion_get_value(k) == 0.73
+    promotion_delete_key(k)
+    assert promotion_has_key(k) is False
+    assert promotion_get_value(k) is None
+    assert promotion_get_lasttime(k) is None
+    promotion_close_map()
+    os.remove(path)
+    print("promotion hashmap tests passed")
+
