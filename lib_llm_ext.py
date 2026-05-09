@@ -18,18 +18,26 @@ ANTHROPIC_CLIENT = openai.OpenAI(
 def _clean(text):
     return text.replace("_quote_", '"').replace("_apostrophe_", "'")
 
-def _chat(client, model, content, max_tokens=6000):
-    resp = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": content}],
-        max_tokens=max_tokens,
-        extra_body={
+def _chat(client, model, content, max_tokens=6000, max_retries=5, retry_delay=1):
+    for attempt in range(max_retries):
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": content}],
+            max_tokens=max_tokens,
+            extra_body={
             "enable_thinking": True,
             "thinking_budget": 6000
-        }
-    )
-    return _clean(resp.choices[0].message.content)
+            }
+        )
 
+        text = resp.choices[0].message.content
+
+        if text is not None:
+            return _clean(text)
+
+        time.sleep(retry_delay)
+
+    raise RuntimeError("LLM returned None after all retry attempts")
 
 def useOpenRouter(content):
     return _chat(
