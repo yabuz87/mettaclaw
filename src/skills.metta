@@ -44,7 +44,7 @@
           (translatePredicate (close $Out))
           APPEND-FILE-SUCCESS))
 
-!(import_prolog_functions_from_file (library mettaclaw ./src/skills.pl) (shell first_char))
+!(import_prolog_functions_from_file (library mettaclaw ./src/skills.pl) (shell first_char gc))
 
 !(import_prolog_function call_with_inference_limit)
 (= (metta $str)
