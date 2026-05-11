@@ -10,6 +10,7 @@
 (= (maxPersistentAtomsChars) (empty))
 (= (visionRate) (empty))
 (= (visionChannel) (empty))
+(= (visionChannelActive) (empty))
 
 (= (initLoop)
    (progn (configure maxNewInputLoops 50) ;20
@@ -24,6 +25,7 @@
           (configure maxPersistentAtomsChars 10000)
           (configure visionRate 5)
           (configure visionChannel https://www.youtube.com/watch?v=CMn6xQXuSjI)
+          (configure visionChannelActive False)
           (change-state! &prevmsg "")
           (change-state! &lastresults "")
           (change-state! &loops (maxNewInputLoops))))
@@ -37,6 +39,7 @@
                          " toolName4 arg4" (newline)
                          " toolName5 arg5" (newline)
                          " LAST_SKILL_USE_RESULTS: " (last_chars (get-state &lastresults) (maxFeedback)) " HISTORY: " (getHistory)
+                         " MOST_PROMOTED_MEMORIES: " (best-promoted-memories)
                          " TIME: " (get_time_as_string)))))
 
 (= (HandleError $msg $cmd $sexpr)
@@ -65,7 +68,7 @@
                                        ($_ (println! $lastmessage))
                                        ($send (py-str ($prompt $lastmessage)))
                                        ($_ (println! (CHARS_SENT: (string_length $send) $send)))
-                                       ($respi (if (== 0 (% $k (visionRate)))
+                                       ($respi (if (and (visionChannelActive) (== 0 (% $k (visionRate))))
                                                    (py-call (lib_llm_ext.useClaudeYoutubeImage $send (visionChannel)))
                                                    (if (== (provider) OpenAI)
                                                        (useGPT (LLM) (maxOutputToken) (reasoningMode) $send)

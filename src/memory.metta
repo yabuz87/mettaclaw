@@ -6,6 +6,7 @@
 (= (maxHistory) (empty))
 (= (embeddingprovider) (empty))
 (= (promotionInflationFactor) (empty))
+(= (mostPromotedMemories) (empty))
 
 (= (initMemory)
    (progn (println! "Initializing memory")
@@ -16,6 +17,7 @@
           (configure maxHistory 30000)
           (configure embeddingprovider OpenAI) ;OpenAI or Local
           (configure promotionInflationFactor 10)
+          (configure mostPromotedMemories 10)
           (py-call (helper.promotion_open_map))
           (if (== (embeddingprovider) Local)
               (py-call (lib_llm_ext.initLocalEmbedding)) _)))
@@ -47,6 +49,19 @@
 (= (remember $str)
    (progn (py-call (lib_chromadb.remember $str (embed $str) (get_time_as_string)))
           REMEMBER-SUCCESS))
+
+(= (best-promoted-memory-ids)
+   (let* (($current_time (get_time))
+          ($uuids (py-call (helper.promotion_get_all_keys)))
+          ($ranked (takeK (mostPromotedMemories)
+                          (msort (collapse (let* (($uuid (superpose $uuids))
+                                                  ($promotion (get-promotion $current_time $uuid)))
+                                                 (if (> $promotion 0.0) ((- 0.0 $promotion) $uuid))))))))
+         (collapse (let ($p $uuid) (superpose $ranked) $uuid))))
+
+(= (best-promoted-memories)
+   (let $uuids (best-promoted-memory-ids)
+        (repr (py-call (lib_chromadb.query_by_ids $uuids)))))
 
 (= (get-promotion $current_time $uuid)
    (let* (($promotion (py-call (helper.promotion_get_value $uuid 0.0)))

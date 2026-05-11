@@ -119,18 +119,18 @@ def normalize_string(x):
         return str(x)
 
 def test_balance_parenthesis():
-	assert balance_parentheses('(write-file test.txt hello world)') == '((write-file "test.txt" "hello world"))'
-	assert balance_parentheses('(append-file test.txt hello world)') == '((append-file "test.txt" "hello world"))'
-	assert balance_parentheses('(write-file "test.txt" hello world)') == '((write-file "test.txt" "hello world"))'
-	assert balance_parentheses('(write-file "test.txt" "hello world")') == '((write-file "test.txt" "hello world"))'
-	assert balance_parentheses('(write-file test.txt "hello world")') == '((write-file "test.txt" "hello world"))'
-	assert balance_parentheses('(send test.xt hello world)') == '((send "test.xt hello world"))'
-	assert balance_parentheses('write-file test.txt hello world') == '((write-file "test.txt" "hello world"))'
-	assert balance_parentheses('append-file test.txt hello world') == '((append-file "test.txt" "hello world"))'
-	assert balance_parentheses('write-file "test.txt" hello world') == '((write-file "test.txt" "hello world"))'
-	assert balance_parentheses('write-file "test.txt" "hello world"') == '((write-file "test.txt" "hello world"))'
-	assert balance_parentheses('write-file test.txt "hello world"') == '((write-file "test.txt" "hello world"))'
-	assert balance_parentheses('send test.xt hello world') == '((send "test.xt hello world"))'
+    assert balance_parentheses('(write-file test.txt hello world)') == '((write-file "test.txt" "hello world"))'
+    assert balance_parentheses('(append-file test.txt hello world)') == '((append-file "test.txt" "hello world"))'
+    assert balance_parentheses('(write-file "test.txt" hello world)') == '((write-file "test.txt" "hello world"))'
+    assert balance_parentheses('(write-file "test.txt" "hello world")') == '((write-file "test.txt" "hello world"))'
+    assert balance_parentheses('(write-file test.txt "hello world")') == '((write-file "test.txt" "hello world"))'
+    assert balance_parentheses('(send test.xt hello world)') == '((send "test.xt hello world"))'
+    assert balance_parentheses('write-file test.txt hello world') == '((write-file "test.txt" "hello world"))'
+    assert balance_parentheses('append-file test.txt hello world') == '((append-file "test.txt" "hello world"))'
+    assert balance_parentheses('write-file "test.txt" hello world') == '((write-file "test.txt" "hello world"))'
+    assert balance_parentheses('write-file "test.txt" "hello world"') == '((write-file "test.txt" "hello world"))'
+    assert balance_parentheses('write-file test.txt "hello world"') == '((write-file "test.txt" "hello world"))'
+    assert balance_parentheses('send test.xt hello world') == '((send "test.xt hello world"))'
 
 _PROMOTION_CONN = None
 
@@ -173,6 +173,12 @@ def promotion_get_value(k, default=None):
         (promotion_key(k),)
     ).fetchone()
     return row[0] if row else default
+
+def promotion_get_all_keys():
+    rows = _PROMOTION_CONN.execute(
+        "SELECT key FROM kv"
+    ).fetchall()
+    return [str(uuid.UUID(bytes=row[0])) for row in rows]
 
 def promotion_set_lasttime(k, t):
     _PROMOTION_CONN.execute(
