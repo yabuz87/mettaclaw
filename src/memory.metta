@@ -62,7 +62,7 @@
 (= (best-promoted-memories)
    (let $uuids (best-promoted-memory-ids)
         (let $ret (repr (py-call (lib_chromadb.query_by_ids $uuids)))
-             (progn (write-file ./repos/mettaclaw/memory/best_promoted_memories_debug.txt)
+             (progn (write-file ./repos/mettaclaw/memory/best_promoted_memories_debug.txt $ret)
                     $ret))))
 
 (= (get-promotion $current_time $uuid)
