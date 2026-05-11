@@ -4,8 +4,8 @@
     "- Query long-term embedding memory for skills and memories with short phrases only: query string"
     "- Episodes searches history for episodes around a time stamp, time format is same as in TIME: episodes time_string"
     "- Pin a certain string as short-term working memory item to keep track of task state: pin string"
-    "- Promote a memory that you found useful, to make it easier to be recalled in the future in similar context: promote uuid"
-    "- Demote a memory that you do not find useful or not anymore, to remove its promotion advantage: demote uuid"
+    "- Promote a memory that you found useful, to make it easier to be recalled in the future in similar context: promote time_string"
+    "- Demote a memory that you do not find useful or not anymore, to remove its promotion advantage: demote time_string"
     ;SHELL AND FILE I/O:
     "- Execute shell command without apostrophe in string, it returns the command output to you: shell string"
     "- Read file to string: read-file filename"
