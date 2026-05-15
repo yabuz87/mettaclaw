@@ -2,7 +2,7 @@
    (;INTERNAL:
     "- Remember a particular string such as skills and memories: remember string"
     "- Query long-term embedding memory for skills and memories with short phrases only: query string"
-    "- Episodes searches history for episodes around a time stamp, time format is same as in TIME: episodes time_string"
+    "- Episodes searches history for episodes around a time stamp, time format is same as in TIME: episodes %Y-%m-%d %H:%M:%S"
     "- Pin a certain string as short-term working memory item to keep track of task state: pin string"
     "- Promote a memory that you found useful, to make it easier to be recalled in the future in similar context: promote time_string"
     "- Demote a memory that you do not find useful or not anymore, to remove its promotion advantage: demote time_string"
