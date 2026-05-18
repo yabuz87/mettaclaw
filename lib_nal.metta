@@ -198,5 +198,9 @@
 (= (|-nal ((¬ $B) $T1) ((==> $A $B) $T2)) ($A (Truth_Abduction (Truth_Negation $T1) $T2)))
 (= (|-nal ($B $T1) ((==> $A (¬ $B)) $T2)) ($A (Truth_Abduction (Truth_Negation $T1) $T2)))
 
+;;NAL-6
+(= (|-nal ((--> $a $b) $T1) ((--> $a $c) $T2)) ((==> (--> $x $c) (--> $x $b)) (Truth_Induction $T1 $T2)))
+(= (|-nal ((--> $a $c) $T1) ((--> $b $c) $T2)) ((==> (--> $b $x) (--> $a $x)) (Truth_Abduction $T1 $T2)))
+
 (= (|- $a $b)
    (unique-atom (collapse (superpose ((|-nal $a $b) (|-nal $b $a))))))
