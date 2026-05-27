@@ -23,6 +23,7 @@
     "           ((--> (× tiger elephant) eat) (stv 1.0 0.9)))"
     "- Also: note the $1 for independent variables, and for negated knowledge use (stv 0.0 0.9)"
     "- Additionally |- also works for revision, to merge evidence even when the term of both premises is the same."
+    "- Also, you can use |-t for temporal inference (sequence formation &/, induction of =/>, deduction, syllogistic inference on =/> etc.)"
     "- You can use: metta (add-atom &persistent sexpression) to add expressions to the persistent atomspace up to a configured maximum size."
     "- Functions added there are also persisted and can be called directly via the metta command, and check for current content with: metta (get-atoms &persistent)"))
 
