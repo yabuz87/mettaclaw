@@ -20,6 +20,10 @@ def _clean(text):
 
 def _chat(client, model, content, max_tokens=6000, max_retries=5, retry_delay=1):
     sysmsg, usermsg = content.split(":-:-:-:", 1)
+
+    if not usermsg.strip():
+        usermsg = "EMPTY / NO NEW USER INPUT."
+
     for attempt in range(max_retries):
         resp = client.chat.completions.create(
             model=model,
@@ -27,8 +31,8 @@ def _chat(client, model, content, max_tokens=6000, max_retries=5, retry_delay=1)
                       {"role": "user", "content": usermsg}],
             max_tokens=max_tokens,
             extra_body={
-            "enable_thinking": True,
-            "thinking_budget": 6000
+                "enable_thinking": True,
+                "thinking_budget": 6000
             }
         )
 
