@@ -22,7 +22,7 @@
           (configure maxOutputToken 6000)
           (configure reasoningMode medium)
           (configure wakeupInterval 600) ;600=10 minutes
-          (configure maxPersistentAtomsChars 10000)
+          (configure maxPersistentAtomsChars 50000)
           (configure visionRate 5)
           (configure visionChannel https://www.youtube.com/watch?v=CMn6xQXuSjI)
           (configure visionChannelActive False)
