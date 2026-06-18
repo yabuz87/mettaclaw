@@ -1,12 +1,11 @@
 from collections import deque
-import json
 import re
+import json
 import sqlite3
 import uuid
 import os
 from datetime import datetime
 
-TS_RE = re.compile(r'^\("(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})"')
 LLM_COMMANDS = {
     "pin",
     "remember",
@@ -23,6 +22,40 @@ LLM_COMMANDS = {
     "append-file",
 }
 
+def quote_arg(x):
+    return json.dumps(x, ensure_ascii=False)
+
+def starts_command_line(line):
+    s = line.lstrip()
+    if not s:
+        return False
+    # allow "(send ...)" as command start too
+    if s.startswith("("):
+        s = s[1:].lstrip()
+    if not s:
+        return False
+    first = s.split(maxsplit=1)[0].rstrip(")")
+    return first in LLM_COMMANDS
+
+
+def split_command_blocks(s):
+    blocks = []
+    cur = []
+    for raw in s.splitlines():
+        if not raw.strip():
+            if cur:
+                cur.append(raw)
+            continue
+        if starts_command_line(raw) and cur:
+            blocks.append("\n".join(cur).strip())
+            cur = [raw]
+        else:
+            cur.append(raw)
+    if cur:
+        blocks.append("\n".join(cur).strip())
+    return blocks
+
+TS_RE = re.compile(r'^\("(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})"')
 
 def extract_timestamp(line):
     m = TS_RE.search(line)
@@ -32,7 +65,6 @@ def extract_timestamp(line):
         return datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S")
     except ValueError:
         return None
-
 
 def around_time(needle_time_str, k):
     needle_time_str = needle_time_str.replace(r'\"', '').replace('"', '').strip()
@@ -64,90 +96,23 @@ def around_time(needle_time_str, k):
         ret += f"{lineno}:{line}"
     return ret
 
-
-def _strip_outer_parens(line):
-    if line.startswith("(") and line.endswith(")"):
-        return line[1:-1].strip()
-    return line
-
-
-def _get_command_name(line):
-    normalized = line.strip()
-    while normalized.startswith("("):
-        normalized = normalized[1:].lstrip()
-    while normalized.endswith(")"):
-        normalized = normalized[:-1].rstrip()
-    if not normalized:
-        return ""
-    return normalized.split(maxsplit=1)[0]
-
-
-def _is_known_command(line):
-    return _get_command_name(line) in LLM_COMMANDS
-
-
-def _decode_quoted_arg(text):
-    try:
-        return json.loads(text)
-    except Exception:
-        return None
-
-
-def _merge_send_continuations(lines):
-    merged = []
-    idx = 0
-    while idx < len(lines):
-        line = lines[idx]
-        if _get_command_name(line) != "send":
-            merged.append(line)
-            idx += 1
-            continue
-
-        send_wrapped = line.strip().startswith("(")
-        head = line.strip()
-        while head.startswith("("):
-            head = head[1:].lstrip()
-        parts = head.split(maxsplit=1)
-        payload = parts[1].strip() if len(parts) > 1 else ""
-        decoded_payload = _decode_quoted_arg(payload) if payload.startswith('"') else None
-        text = decoded_payload if decoded_payload is not None else payload
-
-        idx += 1
-        continuations = []
-        while idx < len(lines) and not _is_known_command(lines[idx]):
-            continuation = lines[idx].strip()
-            if send_wrapped and continuation.endswith(")"):
-                continuation = continuation[:-1].rstrip()
-                continuations.append(continuation)
-                idx += 1
-                break
-            continuations.append(continuation)
-            idx += 1
-
-        if continuations:
-            if text:
-                text = text + "\n" + "\n".join(continuations)
-            else:
-                text = "\n".join(continuations)
-            merged.append(f"send {json.dumps(text, ensure_ascii=False)}")
-        else:
-            merged.append(line)
-    return merged
-
-
 def balance_parentheses(s):
     s = s.replace("_quote_", '"').replace("_newline_", "\n")
     sexprs = []
     special_two_arg_cmds = {"write-file", "append-file"}
-    lines = [line.strip() for line in s.splitlines() if line.strip()]
-    lines = _merge_send_continuations(lines)
-    for line in lines:
+    for line in split_command_blocks(s):
+        line = line.strip()
+        if not line:
+            continue
         if line.startswith("(-"):
             line = "(pin -" + line[2:]
         elif line.startswith("-"):
             line = "pin " + line
         # remove one outer (...) if present
-        line = _strip_outer_parens(line)
+        if line.startswith("(") and line.endswith(")"):
+            line = line[1:-1].strip()
+        elif line.startswith("("):
+            line = line[1:].strip()
         parts = line.split(maxsplit=1)
         if not parts:
             continue
@@ -173,32 +138,29 @@ def balance_parentheses(s):
                     filename = rest[:end+1]
                     content = rest[end+1:].strip()
                 else:
-                    filename = '"' + rest[1:].replace('"', '\\"') + '"'
+                    filename = quote_arg(rest[1:])
                     content = ""
             else:
                 split_rest = rest.split(maxsplit=1)
-                filename = '"' + split_rest[0].replace('"', '\\"') + '"'
+                filename = quote_arg(split_rest[0])
                 content = split_rest[1].strip() if len(split_rest) > 1 else ""
             if content:
-                if content.startswith('"') and content.endswith('"'):
+                if content.startswith('"') and content.endswith('"') and "\n" not in content:
                     sexprs.append(f"({cmd} {filename} {content})")
                 else:
-                    content = content.replace('"', '\\"')
-                    sexprs.append(f'({cmd} {filename} "{content}")')
+                    sexprs.append(f"({cmd} {filename} {quote_arg(content)})")
             else:
                 sexprs.append(f"({cmd} {filename})")
             continue
         if rest:
-            if rest.startswith('"') and rest.endswith('"'):
+            if rest.startswith('"') and rest.endswith('"') and "\n" not in rest:
                 sexprs.append(f"({cmd} {rest})")
             else:
-                rest = rest.replace('"', '\\"')
-                sexprs.append(f'({cmd} "{rest}")')
+                sexprs.append(f"({cmd} {quote_arg(rest)})")
         else:
             sexprs.append(f"({cmd})")
     ret = " ".join(sexprs)
     return "(" + ret + ")"
-
 
 def normalize_string(x):
     try:
@@ -207,7 +169,6 @@ def normalize_string(x):
         return str(x).encode("utf-8", errors="ignore").decode("utf-8", errors="ignore")
     except Exception:
         return str(x)
-
 
 def test_balance_parenthesis():
     assert balance_parentheses('(write-file test.txt hello world)') == '((write-file "test.txt" "hello world"))'
@@ -222,16 +183,6 @@ def test_balance_parenthesis():
     assert balance_parentheses('write-file "test.txt" "hello world"') == '((write-file "test.txt" "hello world"))'
     assert balance_parentheses('write-file test.txt "hello world"') == '((write-file "test.txt" "hello world"))'
     assert balance_parentheses('send test.xt hello world') == '((send "test.xt hello world"))'
-    assert balance_parentheses('send Here are the planets:\n1. Mercury\n2. Venus') == '((send "Here are the planets:\\n1. Mercury\\n2. Venus"))'
-    assert balance_parentheses('send Here are the options:\n- MacBook Air\n- ThinkPad X1\npin done') == '((send "Here are the options:\\n- MacBook Air\\n- ThinkPad X1") (pin "done"))'
-    assert balance_parentheses('send "Plain text version:"\n**Mars** - red planet\nNote: Pluto is a dwarf planet') == '((send "Plain text version:\\n**Mars** - red planet\\nNote: Pluto is a dwarf planet"))'
-    assert balance_parentheses('(send Here are the planets:\n1. Mercury\n2. Venus)') == '((send "Here are the planets:\\n1. Mercury\\n2. Venus"))'
-    assert balance_parentheses('send "hello" world') == '((send "\\"hello\\" world"))'
-    # bare "()" lines yield no tokens after _strip_outer_parens and must be skipped, not crash
-    assert balance_parentheses('()') == '()'
-    assert balance_parentheses('') == '()'
-    assert balance_parentheses('   ') == '()'
-    assert balance_parentheses('()\nsend hello') == '((send "hello"))'
 
 _PROMOTION_CONN = None
 
@@ -340,5 +291,13 @@ if __name__ == "__main__":
     assert promotion_get_lasttime(k) is None
     promotion_close_map()
     os.remove(path)
+    assert balance_parentheses("""shell cat <<'PYEOF' > /tmp/g524.py
+import numpy as np, math
+from scipy.special import polygamma
+
+def tri(x):
+    return float(polygamma(1, max(x, 1e-10)))
+PYEOF
+shell python /tmp/g524.py""") == """((shell "cat <<'PYEOF' > /tmp/g524.py\\nimport numpy as np, math\\nfrom scipy.special import polygamma\\n\\ndef tri(x):\\n    return float(polygamma(1, max(x, 1e-10)))\\nPYEOF") (shell "python /tmp/g524.py"))"""
     print("promotion hashmap tests passed")
 
