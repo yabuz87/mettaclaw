@@ -291,6 +291,5 @@ if __name__ == "__main__":
     assert promotion_get_lasttime(k) is None
     promotion_close_map()
     os.remove(path)
-    assert balance_parentheses("""shell cat <<'PYEOF' > /tmp/g524.py
     print("promotion hashmap tests passed")
 
