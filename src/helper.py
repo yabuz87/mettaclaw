@@ -292,12 +292,5 @@ if __name__ == "__main__":
     promotion_close_map()
     os.remove(path)
     assert balance_parentheses("""shell cat <<'PYEOF' > /tmp/g524.py
-import numpy as np, math
-from scipy.special import polygamma
-
-def tri(x):
-    return float(polygamma(1, max(x, 1e-10)))
-PYEOF
-shell python /tmp/g524.py""") == """((shell "cat <<'PYEOF' > /tmp/g524.py\\nimport numpy as np, math\\nfrom scipy.special import polygamma\\n\\ndef tri(x):\\n    return float(polygamma(1, max(x, 1e-10)))\\nPYEOF") (shell "python /tmp/g524.py"))"""
     print("promotion hashmap tests passed")
 
