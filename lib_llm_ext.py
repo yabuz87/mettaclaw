@@ -49,7 +49,7 @@ def _chat(client, model, content, max_tokens=6000, max_retries=5, retry_delay=1)
 def useOpenRouter(content):
     return _chat(
         client=OPENROUTER_CLIENT,
-        model="z-ai/glm-5.1",  # replace with your OpenRouter model id
+        model="z-ai/glm-5.2",  # replace with your OpenRouter model id
         content=content
     )
 
