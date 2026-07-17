@@ -14,6 +14,15 @@
     ;COMMUNICATION CHANNELS:
     "- Send message to user: send string"
     "- Search the web: search string"
+    ;MUSIC GENERATION:
+    "- Generate symbolic multi-track MIDI by calling the sibling musicGeneration project. Use compact specs like beats=8 seed=42 edo=12 tempo=120 meter=4/4 groove=straight out=music_outputs: music-generate string"
+    "- List recent generated music artifacts, optionally with out=music_outputs: music-list string"
+    "- Inspect a generated music manifest path, or inspect latest with out=music_outputs: music-inspect string"
+    "- Compute GTTM transition energy between two BeatStates. Optional prev=8 comma-separated ints next=8 comma-separated ints time=0 edo=12: music-gttm-energy string"
+    "- Run only Method A planning and save a BeatState path JSON. Use beats=8 seed=42 edo=12 out=music_outputs: music-plan-method-a string"
+    "- Decode latest or specified path JSON into score JSON. Use path=... or out=music_outputs: music-decode-score string"
+    "- Render latest or specified score JSON to MIDI. Use score=... edo=12 or out=music_outputs edo=19: music-render-midi string"
+    "- Summarize latest or specified MIDI artifact. Use midi=... or out=music_outputs: music-summarize-midi string"
     ;CODE EXECUTION:
     "- Execute MeTTa expression: metta sexpression"
     "- Example to invoke Non-Axiomatic Logic via MeTTa: "

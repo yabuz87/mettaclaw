@@ -11,6 +11,7 @@
 !(import! &self (library mettaclaw ./channels/websearch.py))
 !(import! &self (library mettaclaw ./src/utils))
 !(import! &self (library mettaclaw ./src/channels))
+!(import! &self (library mettaclaw ./src/music_generation))
 !(import! &self (library mettaclaw ./src/skills))
 !(import! &self (library mettaclaw ./src/memory))
 !(import! &self (library mettaclaw ./src/context))

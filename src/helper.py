@@ -20,6 +20,14 @@ LLM_COMMANDS = {
     "read-file",
     "write-file",
     "append-file",
+    "music-generate",
+    "music-list",
+    "music-inspect",
+    "music-gttm-energy",
+    "music-plan-method-a",
+    "music-decode-score",
+    "music-render-midi",
+    "music-summarize-midi",
 }
 
 def quote_arg(x):
